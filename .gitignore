@@ -1,3 +1,7 @@
+# My ignores
+_game/
+
+# Python ignores
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -12,5 +12,8 @@ dependencies = [
     "pygame-ce>=2.5.7"
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/luupy2d"]
+
 [project.scripts]
 luupy2d = "luupy2d.luupy2d:main"
