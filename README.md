@@ -17,4 +17,4 @@ pip install -e .
 (**não esqueça do ponto! '.' no final do comando**)
 
 ### Pronto!
-Teste usando o comando `luupy2d` no terminal!
+em uma pasta vazia, teste usando o comando `luupy2d` no terminal!

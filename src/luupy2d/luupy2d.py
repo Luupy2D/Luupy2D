@@ -9,12 +9,13 @@ def new_game():
 
     try:
         #gerar as pastas
-        (target / "assets" / "graphics").mkdir(parents=True,exist_ok=True)
-        (target / "assets" / "sounds").mkdir(parents=True,exist_ok=True)
+        #(target / "assets" / "graphics").mkdir(parents=True,exist_ok=True)
+        #(target / "assets" / "sounds").mkdir(parents=True,exist_ok=True)
         (target / "stages").mkdir(parents=True,exist_ok=True)
 
-        #copiar o main.py padrão
         src_folder = Path(__file__).resolve().parent
+        
+        #copiar o main.py padrão
         main_script = src_folder / "demos" / "default" / "main.py"
 
         #print(f"o path do script: {main_script}")
@@ -23,6 +24,10 @@ def new_game():
             shutil.copy(main_script, target / "main.py")
         else:
             raise FileNotFoundError("main.py not found.")
+
+        #copiar a pasta assets:
+        assets_folder = src_folder / "assets"
+        shutil.copytree(assets_folder, target / "assets", dirs_exist_ok=True)
 
     except Exception as e:
         print(f"Erro ao criar o projeto: {e}")
