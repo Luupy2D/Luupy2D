@@ -101,6 +101,10 @@ anim_vel = 0.15
 anim_state = "agachado"
 anim_frames = anim[anim_state]
 
+#catedral
+catedral = pygame.image.load("assets/graphics/catedral.png").convert_alpha()
+
+
 #coisas relacionadas ao chao
 def gerar_chao(coords):
     offset = 0
@@ -244,6 +248,7 @@ while loop:
         player_sprite = player_sprite_l
 
     ###PARTE GRÁFICA##
+    screen.blit(catedral, (0,0))
     screen.fill((175,230,250))
 
     #desenhar objetos

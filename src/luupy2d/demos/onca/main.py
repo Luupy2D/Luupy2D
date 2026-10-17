@@ -26,6 +26,8 @@ class Camera2D:
     def visivel(self, target_rect):
         return self.rect.colliderect(target_rect)
 
+
+
 ## Animações
 def carregar_quadros(path):
     quadros = []
@@ -70,6 +72,11 @@ font = pygame.Font(size=16)
 DEBUG = True
 TILE = 32
 
+#catedral
+##cenário movimento:
+fator = 0.3
+offset = 0
+catedral = pygame.image.load("assets/graphics/catedral.png").convert_alpha()
 
 # objetos do jogo
 #player (classe player.py)
@@ -263,7 +270,11 @@ while loop:
 
 
     ###PARTE GRÁFICA##
-    screen.fill((175,230,250))
+    
+    offset = -(camera.rect.x * fator) % WIDTH
+    screen.blit(catedral, (offset - WIDTH, 0))
+    screen.blit(catedral, (offset, 0))
+    #screen.fill((175,230,250))
 
     #desenhar objetos
     #screen.blit(player_sprite, camera.aplicar(player_rect))
