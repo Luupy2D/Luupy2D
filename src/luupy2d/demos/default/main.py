@@ -1,4 +1,5 @@
 import pygame
+import os
 #import luupy2d
 
 class Camera2D:
@@ -57,11 +58,48 @@ player_sprite_r = pygame.image.load("assets/graphics/man.png").convert_alpha()
 player_sprite_l = pygame.transform.flip(player_sprite_r, True,False)
 player_sprite = player_sprite_r
 
+## Animações
+def carregar_quadros(path):
+    quadros = []
+
+    imagens = sorted([
+        f for f in os.listdir(path)
+        if f.lower().endswith(('.png', '.bmp', '.jpg', '.jpeg'))
+    ])
+
+    for imagem in imagens:
+        path_imagem = os.path.join(path, imagem)
+        imagem = pygame.image.load(path_imagem)
+
+        quadros.append(imagem)
+
+    return quadros
+
+
+def criar_dic_animacoes(path):
+    animacoes = {}
+
+    for subpasta in os.listdir(path):
+        path_subpasta = os.path.join(path, subpasta)
+
+        if os.path.isdir(path_subpasta):
+            animacoes[subpasta] = carregar_quadros(path_subpasta)
+
+    return animacoes
+
+
+
 #monstro (classe enemy.py)
 monstro_pos = pygame.Vector2(232,96)
 monstro_rect = pygame.Rect(196,188,32,32)
 monstro_sprite = pygame.image.load("assets/graphics/monstro.png").convert_alpha()
 
+#testador de animações
+anim = criar_dic_animacoes("assets/graphics/onca")
+anim_index = 0.0
+anim_vel = 0.15
+anim_state = "agachado"
+anim_frames = anim[anim_state]
 
 #coisas relacionadas ao chao
 def gerar_chao(coords):
@@ -212,6 +250,14 @@ while loop:
     screen.blit(player_sprite, camera.aplicar(player_rect))
     if camera.visivel(monstro_rect):
         screen.blit(monstro_sprite, camera.aplicar(monstro_rect))
+
+    ##TESTE ANIMAÇÃO
+    anim_index += anim_vel
+    if anim_index > len(anim_frames):
+        anim_index = 0.0
+
+    screen.blit(anim_frames[int(anim_index)], (64,64))
+
 
     #debug
     if DEBUG:
