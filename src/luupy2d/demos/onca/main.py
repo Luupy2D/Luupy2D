@@ -69,10 +69,10 @@ loop = True
 dt = 0.0
 gravidade = 9.8
 font = pygame.Font(size=16)
-DEBUG = True
+DEBUG = False
 TILE = 32
 
-#catedral
+###TESTE Catedral###
 ##cenário movimento:
 fator = 0.3
 offset = 0
@@ -89,7 +89,7 @@ player_anim_flip = 1
 ####
 
 player_pos = pygame.Vector2(64,64)
-player_rect = pygame.Rect(64,64,64,51)
+player_rect = pygame.Rect(64,64,64,64)
 player_chao = pygame.Rect(33, player_rect.bottom, player_rect.width - 1,4) #sensor que ajuda a detectar se o player está no chão
 player_speed = pygame.Vector2(0,0)
 player_dir = 1 # 1: Direita   -1: Esquerda
@@ -161,7 +161,9 @@ coordenadas_chao = [
 ]
 
 blocos_chao = gerar_chao(coordenadas_chao)
-chao_imagem = pygame.image.load("assets/graphics/terra.png").convert_alpha()
+terra1 = pygame.image.load("assets/graphics/terra.png",).convert_alpha()
+chao_imagem = terra1.subsurface(pygame.Rect(TILE, 0, TILE, TILE))
+chao_imagem2 = terra1.subsurface(pygame.Rect(TILE, TILE, TILE, TILE))
 
 #configurações de camera
 stage_width = blocos_chao[-1].x + 32
@@ -271,13 +273,12 @@ while loop:
 
     ###PARTE GRÁFICA##
     
+    #desenhar fundo
     offset = -(camera.rect.x * fator) % WIDTH
     screen.blit(catedral, (offset - WIDTH, 0))
     screen.blit(catedral, (offset, 0))
     #screen.fill((175,230,250))
 
-    #desenhar objetos
-    #screen.blit(player_sprite, camera.aplicar(player_rect))
 
     ##DESENHAR PLAYER  
     
@@ -319,13 +320,18 @@ while loop:
         if anim_index > len(anim_frames):
             anim_index = 0.0
     
-        screen.blit(anim_frames[int(anim_index)], (64,64))
+        #screen.blit(anim_frames[int(anim_index)], (64,64))
 
     #desenhar chao
     for bloco in blocos_chao:
         #pygame.draw.rect(screen,"black",bloco)
         if camera.visivel(bloco):
             screen.blit(chao_imagem, camera.aplicar(bloco))
+
+            #um 'hackzinho' pra gerar blocos abaixo até a borda da tela, não gera colisão!!!
+            for i in range(bloco.bottom, HEIGHT, TILE):
+                screen.blit(chao_imagem2, camera.aplicar(pygame.Rect(bloco.x, i, TILE, TILE)))
+
     #atualiza a tela por completo
     pygame.display.flip()
 

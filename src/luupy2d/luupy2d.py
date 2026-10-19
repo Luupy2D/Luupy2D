@@ -59,7 +59,9 @@ def load_demo(demoname):
             (target / "assets" / "sounds").mkdir(parents=True,exist_ok=True)
             (target / "stages").mkdir(parents=True,exist_ok=True)
 
+            #copia tanto os arquivos da demo como os assets padrões.
             shutil.copytree(demo, target, dirs_exist_ok=True)
+            shutil.copytree(src_folder / "assets", target / "assets", dirs_exist_ok=True)
 
         else:
             raise FileNotFoundError(f"folder {demoname} does not exists.")
