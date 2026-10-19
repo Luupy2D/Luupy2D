@@ -98,14 +98,6 @@ player_otg = False
 #define a animação
 player_estado = "parado"
 
-# TODO: Usar o módulo Path pra gerar paths que tem compatibilidades com vários OS.
-# Talvez seja legal criar uma classe sprite.py para lidar com manipulação de imagens.
-#TESTANDO SPRITE DA ONÇA, PORTANTO PARALIZAMOS.
-player_sprite_r = pygame.image.load("assets/graphics/man.png").convert_alpha()
-player_sprite_l = pygame.transform.flip(player_sprite_r, True,False)
-player_sprite = player_sprite_r
-
-
 
 #monstro (classe enemy.py)
 monstro_pos = pygame.Vector2(232,96)
@@ -194,10 +186,10 @@ while loop:
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         player_dir = -1
-        player_estado = "andando"
+        #player_estado = "andando"
     elif keys[pygame.K_RIGHT]:
         player_dir = 1
-        player_estado = "andando"
+        #player_estado = "andando"
     elif keys[pygame.K_DOWN]:
         player_dir = 0
         if player_otg:            
@@ -269,7 +261,22 @@ while loop:
             break
 
 
+    ##ajuste dos estados para as animações
+    if not player_otg:
+        if player_speed.y < 0:
+            player_estado = "subindo"
+        else:
+            player_estado = "descendo"
+        
+    else:
+        if player_speed.x != 0:
+            player_estado = "andando"
 
+        elif player_estado == "agachado":
+            pass
+        else:
+            player_estado = "parado"
+        
 
     ###PARTE GRÁFICA##
     
