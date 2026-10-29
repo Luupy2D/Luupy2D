@@ -69,7 +69,7 @@ loop = True
 dt = 0.0
 gravidade = 9.8
 font = pygame.Font(size=16)
-DEBUG = False
+DEBUG = True
 TILE = 32
 
 ###TESTE Catedral###
@@ -99,11 +99,6 @@ player_otg = False
 player_estado = "parado"
 
 
-#monstro (classe enemy.py)
-monstro_pos = pygame.Vector2(232,96)
-monstro_rect = pygame.Rect(196,188,32,32)
-monstro_sprite = pygame.image.load("assets/graphics/monstro.png").convert_alpha()
-
 #testador de animações
 anim = criar_dic_animacoes("assets/graphics/onca")
 anim_index = 0.0
@@ -115,6 +110,7 @@ anim_frames = anim[anim_state]
 def gerar_chao(coords):
     offset = 0
     chao = []
+
     try:
         for coord in coords:
             if coord[0] == 0:
@@ -122,10 +118,8 @@ def gerar_chao(coords):
                 #TODO: se geramos um buraco, seria util gerar junto um detector q cause a morte do player tmb.
 
             elif coord[0] > 0:
-                for i in range(coord[0]):
-                    chao.append(pygame.Rect(offset, coord[1], TILE, TILE))
-                    offset += TILE
-
+                chao.append(pygame.Rect(offset, coord[1]*TILE, coord[0]*TILE, HEIGHT - coord[1]*TILE))
+                offset += coord[0]*TILE
             #podemos testar outros casos: numeros negativos para gerar telhado!        
             else: 
                 raise IndexError("Problema ao processar as coordenadas!")
@@ -142,14 +136,14 @@ def gerar_chao(coords):
 ## se o primeiro valor for zero, geramos um buraco, de tamanho x = segundo valor (em tiles).
 coordenadas_chao = [
     (0, 1),
-    (4,260),
-    (2,220),
+    (4,8),
+    (2,7),
     (0,2),
-    (12, 200),
-    (10,250),
+    (12, 5),
+    (10,6),
     (0,4),
-    (4,190),
-    (18,260)
+    (4,4),
+    (18,7)
 ]
 
 blocos_chao = gerar_chao(coordenadas_chao)
@@ -157,10 +151,46 @@ terra1 = pygame.image.load("assets/graphics/terra.png",).convert_alpha()
 chao_imagem = terra1.subsurface(pygame.Rect(TILE, 0, TILE, TILE))
 chao_imagem2 = terra1.subsurface(pygame.Rect(TILE, TILE, TILE, TILE))
 
+
 #configurações de camera
-stage_width = blocos_chao[-1].x + 32
+stage_width = blocos_chao[-1].right
 stage_height = 270
 camera = Camera2D(WIDTH, HEIGHT,stage_width,stage_height)
+
+
+
+## BLOCOS ##TODO
+bloqueadores = []
+for chao in blocos_chao:
+    bloqueadores.append(pygame.Rect(chao.x - TILE, chao.y - TILE, TILE, TILE))
+    bloqueadores.append(pygame.Rect(chao.right, chao.y - TILE, TILE, TILE))
+
+    
+        
+
+## OBJETOS ##TODO
+
+## INIMIGOS ##
+#monstro (classe enemy.py)
+#monstro_pos = pygame.Vector2(232,96)
+def gerar_inimigos(coords):
+    inimigos=[]
+    for coord in coords:
+        inimigos.append({'rect':pygame.Rect(coord[0]*TILE, coord[1]*TILE, TILE,TILE), 'dir':-1})
+
+    return inimigos
+
+monstro_rect = pygame.Rect(21*TILE,5*TILE,32,32)
+#monstro_dir = -1
+monstro_sprite = pygame.image.load("assets/graphics/monstro.png").convert_alpha()
+
+coords_inimigos = [
+    (21,5),
+    (9,4),
+    (43,6)
+]
+
+inimigos1 = gerar_inimigos(coords_inimigos)
 
 
 while loop:
@@ -182,14 +212,12 @@ while loop:
                                     
 
     ###PARTE LÓGICA###
-    ##player
+    ##ATUALIZAÇÕES PLAYER ##
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         player_dir = -1
-        #player_estado = "andando"
     elif keys[pygame.K_RIGHT]:
         player_dir = 1
-        #player_estado = "andando"
     elif keys[pygame.K_DOWN]:
         player_dir = 0
         if player_otg:            
@@ -249,16 +277,15 @@ while loop:
     player_chao.centerx = player_rect.centerx
     player_chao.top = player_rect.bottom
 
-    if player_rect.colliderect(monstro_rect):
-        #impacto = pygame.Vector2(100,0)
-        #player_pos -= impacto
-        pass
-
     player_otg = False
     for bloco in blocos_chao:
         if player_chao.colliderect(bloco):
             player_otg = True
             break
+    
+    ## COLISÕES - INIMIGOS
+    
+
 
 
     ##ajuste dos estados para as animações
@@ -277,6 +304,25 @@ while loop:
         else:
             player_estado = "parado"
         
+
+    ##ATUALIZAÇÕES INIMIGO ##
+    for inimigo in inimigos1:
+        if player_rect.colliderect(inimigo['rect']):
+            impacto = pygame.Vector2(100,0)
+            player_pos -= impacto
+        inimigo['rect'].x += (80 * inimigo['dir']) * dt
+
+        for bloq in bloqueadores:
+            if inimigo['rect'].colliderect(bloq):
+                if inimigo['dir'] == -1:
+                    inimigo['rect'].left = bloq.right
+                elif inimigo['dir'] == 1:
+                    inimigo['rect'].right = bloq.left
+                inimigo['dir'] *= -1
+
+    
+    
+    
 
     ###PARTE GRÁFICA##
     
@@ -301,8 +347,9 @@ while loop:
     ##
 
     #desenha monstro
-    if camera.visivel(monstro_rect):
-        screen.blit(monstro_sprite, camera.aplicar(monstro_rect))
+    for inimigo in inimigos1:
+        if camera.visivel(inimigo['rect']):
+            screen.blit(monstro_sprite, camera.aplicar(inimigo['rect']))
 
     
 
@@ -311,12 +358,14 @@ while loop:
     if DEBUG:
         pygame.draw.rect(screen, "blue", camera.aplicar(player_rect), width=1)
         pygame.draw.rect(screen, "green", camera.aplicar(player_chao), width=1)
+        for bloq in bloqueadores:
+            pygame.draw.rect(screen, "yellow", camera.aplicar(bloq), width=1)
 
         debug_text = [
             f"No chão: {player_otg}",
             f"XVel: {player_speed.x}",
             f"YVel: {player_speed.y}",
-            f"Stage_width: {stage_width}"
+            f"Estado: {player_estado}"
         ]
         for i, line in enumerate(debug_text):
             text = font.render(line, True, "black")
@@ -331,13 +380,14 @@ while loop:
 
     #desenhar chao
     for bloco in blocos_chao:
-        #pygame.draw.rect(screen,"black",bloco)
         if camera.visivel(bloco):
-            screen.blit(chao_imagem, camera.aplicar(bloco))
+            pygame.draw.rect(screen, "red", camera.aplicar(bloco), width=1)
 
-            #um 'hackzinho' pra gerar blocos abaixo até a borda da tela, não gera colisão!!!
-            for i in range(bloco.bottom, HEIGHT, TILE):
-                screen.blit(chao_imagem2, camera.aplicar(pygame.Rect(bloco.x, i, TILE, TILE)))
+            for x in range(bloco.x, bloco.right, TILE):
+                screen.blit(chao_imagem, camera.aplicar(pygame.Rect(x, bloco.top, TILE, TILE)))
+                for y in range(bloco.top+TILE, HEIGHT+TILE, TILE):
+                    screen.blit(chao_imagem2, camera.aplicar(pygame.Rect(x, y, TILE, TILE)))
+
 
     #atualiza a tela por completo
     pygame.display.flip()
