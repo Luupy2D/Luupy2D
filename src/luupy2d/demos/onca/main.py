@@ -1,5 +1,6 @@
 import pygame
 import os
+from itertools import chain
 #import luupy2d
 
 class Camera2D:
@@ -72,6 +73,11 @@ font = pygame.Font(size=16)
 DEBUG = True
 TILE = 32
 
+##função coord: gera uma tupla convertendo nosso sistema simplificado de coordenadas para
+##o do mundo.
+def coord(x, y):
+    return (x*TILE, y*TILE, TILE, TILE)
+
 ###TESTE Catedral###
 ##cenário movimento:
 fator = 0.3
@@ -106,7 +112,7 @@ anim_vel = 0.15
 anim_state = "agachado"
 anim_frames = anim[anim_state]
 
-#coisas relacionadas ao chao
+##CHÃO: BASE QUE SE EXTENDE INFINITAMENTE PARA BAIXO ##
 def gerar_chao(coords):
     offset = 0
     chao = []
@@ -147,7 +153,7 @@ coordenadas_chao = [
 ]
 
 blocos_chao = gerar_chao(coordenadas_chao)
-terra1 = pygame.image.load("assets/graphics/terra.png",).convert_alpha()
+terra1 = pygame.image.load("assets/graphics/terra.png").convert_alpha()
 chao_imagem = terra1.subsurface(pygame.Rect(TILE, 0, TILE, TILE))
 chao_imagem2 = terra1.subsurface(pygame.Rect(TILE, TILE, TILE, TILE))
 
@@ -159,18 +165,43 @@ camera = Camera2D(WIDTH, HEIGHT,stage_width,stage_height)
 
 
 
-## BLOCOS ##TODO
+## BLOCOS: BLOCOS AUXILIÁRES QUE PODEM SER USADOS COMO PLATAFORMAS ##TODO
+## Função de gerar lista de blocos (colisões)
+def gerar_blocos(coords):
+    blocos = []
+    #TEMOS Q CONFERIR ISSO COM TRY EXCEPT, O USUÁRIO TEM ACESSO A ESSA INTERFACE 
+    #(PODE INSERIR COORDENADAS ERRADAS)
+    for coord in coords:
+        blocos.append(pygame.Rect(
+            [c*TILE for c in coord]))
+
+
+    return blocos
+
 bloqueadores = []
 for chao in blocos_chao:
     bloqueadores.append(pygame.Rect(chao.x - TILE, chao.y - TILE, TILE, TILE))
     bloqueadores.append(pygame.Rect(chao.right, chao.y - TILE, TILE, TILE))
 
-    
-        
 
-## OBJETOS ##TODO
+coords_bloco1 = [
+    (2,7,2,1),
+    (5,4,1,1),
+    (25,4,1,1),
+    (29,3,5,1),
+    (41,5,1,1)
+]
+blocos1 = gerar_blocos(coords_bloco1)    
+blocos1_imagem = pygame.image.load("assets/graphics/bloco1.png").convert_alpha()        
 
-## INIMIGOS ##
+## OBJETOS: COISAS DIVERSAS QUE POSSUEM ROTINAS DE EXECUÇÃO PRÓPRIAS ##TODO
+objetos = []
+fim = pygame.Rect(coord(53,6))
+fim_imagem=pygame.image.load("assets/graphics/bandeira.png").convert_alpha()
+
+objetos.append({'rect':fim, 'img':fim_imagem}) #um teste de agrupamento...
+
+## INIMIGOS: COISAS QUE SE MOVIMENTAM E MACHUCAM O PLAYER AO ENTRAR EM CONTATO ##
 #monstro (classe enemy.py)
 #monstro_pos = pygame.Vector2(232,96)
 def gerar_inimigos(coords):
@@ -239,7 +270,7 @@ while loop:
     player_pos.x += player_speed.x * dt
     player_rect.x= round(player_pos.x)
 
-    for bloco in blocos_chao:
+    for bloco in chain(blocos_chao, blocos1):
         if player_rect.colliderect(bloco):
             if player_speed.x > 0:
                 player_rect.right = bloco.left
@@ -260,7 +291,7 @@ while loop:
     player_rect.y= round(player_pos.y)
 
     #testes colisão eixo y
-    for bloco in blocos_chao:
+    for bloco in chain(blocos_chao, blocos1):
         if player_rect.colliderect(bloco):
             if player_speed.y > 0:
                 player_rect.bottom = bloco.top
@@ -278,13 +309,10 @@ while loop:
     player_chao.top = player_rect.bottom
 
     player_otg = False
-    for bloco in blocos_chao:
+    for bloco in chain(blocos_chao, blocos1):
         if player_chao.colliderect(bloco):
             player_otg = True
-            break
-    
-    ## COLISÕES - INIMIGOS
-    
+            break 
 
 
 
@@ -363,8 +391,8 @@ while loop:
 
         debug_text = [
             f"No chão: {player_otg}",
-            f"XVel: {player_speed.x}",
-            f"YVel: {player_speed.y}",
+            f"X: {player_rect.x // TILE}",
+            f"Y: {player_rect.y // TILE}",
             f"Estado: {player_estado}"
         ]
         for i, line in enumerate(debug_text):
@@ -379,15 +407,27 @@ while loop:
         #screen.blit(anim_frames[int(anim_index)], (64,64))
 
     #desenhar chao
+    ##Observando como são formas de renderizar parecidas, podemos tmb inserir todas estas listas
+    #em uma só lista (um grupo)
     for bloco in blocos_chao:
         if camera.visivel(bloco):
-            pygame.draw.rect(screen, "red", camera.aplicar(bloco), width=1)
-
             for x in range(bloco.x, bloco.right, TILE):
                 screen.blit(chao_imagem, camera.aplicar(pygame.Rect(x, bloco.top, TILE, TILE)))
                 for y in range(bloco.top+TILE, HEIGHT+TILE, TILE):
                     screen.blit(chao_imagem2, camera.aplicar(pygame.Rect(x, y, TILE, TILE)))
 
+
+    for bloco in blocos1:
+        if camera.visivel(bloco):
+            for x in range(bloco.x, bloco.right, TILE):
+                screen.blit(blocos1_imagem, camera.aplicar(pygame.Rect(x, bloco.top, TILE, TILE)))
+                for y in range(bloco.top+TILE, bloco.bottom, TILE):
+                    screen.blit(blocos1_imagem, camera.aplicar(pygame.Rect(x, y, TILE, TILE)))
+
+
+    ##DESENHAR OBJETOS
+    for obj in objetos:
+        screen.blit(obj['img'], camera.aplicar(obj['rect']))
 
     #atualiza a tela por completo
     pygame.display.flip()

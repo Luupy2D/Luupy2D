@@ -29,6 +29,10 @@ def new_game():
         assets_folder = src_folder / "assets"
         shutil.copytree(assets_folder, target / "assets", dirs_exist_ok=True)
 
+        #copiar a pasta stages:
+        stages_folder = src_folder / "demos" / "default" / "stages"
+        shutil.copytree(stages_folder, target / "stages", dirs_exist_ok=True)
+
     except Exception as e:
         print(f"Erro ao criar o projeto: {e}")
 
