@@ -42,7 +42,7 @@ def play_game():
     try:
         main_script = target / "main.py"
         if main_script.exists():
-            sys.path.insert(0, target)
+            sys.path.insert(0, str(target.resolve()))
             code = main_script.read_text(encoding="utf-8")
 
             exec(code, {"__name__": "__main__", "__file__": str(main_script)})

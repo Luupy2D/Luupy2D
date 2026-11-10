@@ -10,6 +10,12 @@ class Camera2D:
         self.world_width = stage_width
         self.world_height = stage_height
 
+    def definir_largura(self, largura):
+        self.world_width = largura
+
+    def definir_altura(self, altura):
+        self.world_height = altura
+
     def seguir(self, target_rect):
         x = target_rect.centerx - (self.rect.width // 2)
         y = target_rect.centery - (self.rect.height // 2)
@@ -191,38 +197,53 @@ monstro_sprite = pygame.image.load("assets/graphics/monstro.png").convert_alpha(
 
 inimigos1 = []
 
+
+
+##TODO: O gerador de chão nao considera a ausencia de chão como parte da largura.
+##Camera
+camera = Camera2D(WIDTH, HEIGHT,1000,270)
+
 #TESTE DE CARREGAR A FASE COMO UM LIB.
 def carregar_fase(nome_fase):
-    fase = importlib.import_module(f"stages.{nome_fase}")
-    global player_pos
-    global inimigos1
-    global blocos1
-    global blocos_chao
-    global fim
-    global bloqueadores
+    try:
+        fase = importlib.import_module(f"stages.{nome_fase}")
+        global player_pos
+        global inimigos1
+        global blocos1
+        global blocos_chao
+        global fim
+        global bloqueadores
 
 
-    player_pos.update(fase.JOGADOR)
-    inimigos1 = gerar_inimigos(fase.INIMIGO1)
-    blocos1 = gerar_blocos(fase.BLOCO1)
-    blocos_chao = gerar_chao(fase.CHAO)
-    fim = pygame.Rect(coord(fase.FIM[0], fase.FIM[1]))
+        player_pos.update(fase.JOGADOR[0]*TILE, fase.JOGADOR[1]*TILE)
+        inimigos1 = gerar_inimigos(fase.INIMIGO1)
+        blocos1 = gerar_blocos(fase.BLOCO1)
+        blocos_chao = gerar_chao(fase.CHAO)
+        fim = pygame.Rect(coord(fase.FIM[0], fase.FIM[1]))
 
-    bloqueadores.clear()
-    for chao in blocos_chao:
-        bloqueadores.append(pygame.Rect(chao.x - TILE, chao.y - TILE, TILE, TILE))
-        bloqueadores.append(pygame.Rect(chao.right, chao.y - TILE, TILE, TILE))
+        bloqueadores.clear()
+        for chao in blocos_chao:
+            bloqueadores.append(pygame.Rect(chao.x - TILE, chao.y - TILE, TILE, TILE))
+            bloqueadores.append(pygame.Rect(chao.right, chao.y - TILE, TILE, TILE))
 
-    objetos.clear()
-    objetos.append({'rect':fim, 'img':fim_imagem})
+        objetos.clear()
+        objetos.append({'rect':fim, 'img':fim_imagem})
+
+        #configurações de camera
+        stage_width = blocos_chao[-1].right
+        stage_height = 270
+        camera.definir_largura(stage_width)
+        camera.definir_altura(stage_height)
+
+        return True
+
+    except Exception as e:
+        print(f"Erro ao carregar a fase: {e}")
+        return False
 
 
 carregar_fase("fase" + str(fase))
-#configurações de camera
-stage_width = blocos_chao[-1].right
-stage_height = 270
-##TODO: O gerador de chão nao considera a ausencia de chão como parte da largura.
-camera = Camera2D(WIDTH, HEIGHT,stage_width,stage_height)
+
 
 while loop:
     #fila de eventos
@@ -350,8 +371,10 @@ while loop:
 
     ##TOCAR NA BANDEIRA
     if player_rect.colliderect(fim):
-        fase += 1
-        carregar_fase("fase" + str(fase))
+        fase += +1 
+        if  not carregar_fase("fase" + str(fase)):
+            fase=1
+            carregar_fase("fase1")   
 
 
     ###PARTE GRÁFICA##
